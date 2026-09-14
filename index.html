@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMemo | Smart Clipboard Companion</title>
+  <meta name="description" content="A minimalist, privacy-focused desktop clipboard manager for Windows, macOS, and Linux. Built for speed, instant previews, and zero cloud tracking." />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png" />
+  <link rel="manifest" href="assets/images/site.webmanifest" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- Minimalist Navigation -->
+  <header>
+    <nav class="navbar" id="navbar" aria-label="Main Navigation">
+      <div class="container">
+        <a href="#" class="nav-brand" aria-label="iMemo Home">
+          <img src="assets/images/logo.svg" alt="iMemo Logo" width="26" height="26" />
+          <span>iMemo</span>
+        </a>
+
+        <ul class="nav-links">
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#shortcuts" class="nav-link">Shortcuts</a></li>
+          <li><a href="#downloads" class="nav-link">Download</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
+          <li><a href="https://github.com/lwshakib/imemo-smart-clipboard" target="_blank" rel="noopener noreferrer" class="nav-link">GitHub</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <!-- Dark / Light Theme Toggle -->
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+            <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <!-- Download Pill CTA -->
+          <a href="#downloads" class="btn btn-primary btn-sm">
+            <span>Download</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge">
+              <span class="badge-dot"></span>
+              The Ultimate Clipboard Companion
+            </span>
+          </div>
+
+          <h1 class="hero-title">
+            Your Clipboard, <br />
+            <span>Reimagined for Productivity.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Stop losing track of what you copy. iMemo stores your history, enables instant previews, and puts your most important clips just a hotkey away.
+          </p>
+
+          <div class="hero-actions">
+            <!-- Dynamic OS Download Button -->
+            <a href="#downloads" class="btn btn-primary" id="hero-download-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span id="hero-os-name">Download for Windows</span>
+            </a>
+
+            <a href="#features" class="btn btn-secondary">
+              <span>Explore Features</span>
+            </a>
+          </div>
+
+          <div class="hero-platform-hint">
+            <span id="hero-os-detected-hint">Windows 10 / 11 (x64)</span>
+            <span class="dot"></span>
+            <span>Lightweight</span>
+            <span class="dot"></span>
+            <span>100% Local Storage</span>
+            <span class="dot"></span>
+            <span>Open Source</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section-features" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Features</span>
+          <h2 class="section-title">Built for speed. Designed for precision.</h2>
+          <p class="section-desc">
+            Everything you need to manage your clipboard history without breaking your workflow.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Card 1 -->
+          <div class="feature-card">
+            <span class="feature-card-num">01</span>
+            <h3 class="feature-card-title">Persistent History</h3>
+            <p class="feature-card-desc">
+              Stores up to 100 clipboard items, including text and images, so you never lose that important snippet again.
+            </p>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="feature-card">
+            <span class="feature-card-num">02</span>
+            <h3 class="feature-card-title">Instant Paste</h3>
+            <p class="feature-card-desc">
+              Paste directly into any application the moment you select an item from your history.
+            </p>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="feature-card">
+            <span class="feature-card-num">03</span>
+            <h3 class="feature-card-title">Global Hotkeys</h3>
+            <p class="feature-card-desc">
+              Toggle your clipboard history from anywhere with a customizable global shortcut (Alt + V).
+            </p>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="feature-card">
+            <span class="feature-card-num">04</span>
+            <h3 class="feature-card-title">Lightning Fast Search</h3>
+            <p class="feature-card-desc">
+              Find exactly what you're looking for with instantaneous search across all your saved clips.
+            </p>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="feature-card">
+            <span class="feature-card-num">05</span>
+            <h3 class="feature-card-title">Native Image Support</h3>
+            <p class="feature-card-desc">
+              Seamlessly captures screenshots and copied images alongside text snippets with high-resolution thumbnails.
+            </p>
+          </div>
+
+          <!-- Card 6 -->
+          <div class="feature-card">
+            <span class="feature-card-num">06</span>
+            <h3 class="feature-card-title">Secure Local Storage</h3>
+            <p class="feature-card-desc">
+              Everything stays on your device. No cloud sync, no tracking, and zero telemetry. 100% private.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience / Flow Section -->
+    <section class="section-steps" id="experience">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Workflow</span>
+          <h2 class="section-title">Designed for Focus.</h2>
+          <p class="section-desc">
+            iMemo stays out of your way until you need it. Minimalist interface, smooth transitions, and instant access.
+          </p>
+        </div>
+
+        <div class="steps-list">
+          <div class="step-row">
+            <span class="step-index">01</span>
+            <div class="step-content">
+              <h3>Smart Capture</h3>
+              <p>Automatically detects text and image copies across all your applications. Everything is organized and timestamped for easy retrieval.</p>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <span class="step-index">02</span>
+            <div class="step-content">
+              <h3>Instant Preview</h3>
+              <p>Hover over any item to get a quick glimpse of its contents. Need a closer look? Open a dedicated preview window for longer snippets and code blocks.</p>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <span class="step-index">03</span>
+            <div class="step-content">
+              <h3>Universal Compatibility</h3>
+              <p>Available for Windows, macOS, and Linux. iMemo works where you work, ensuring a consistent experience across all your devices.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Keyboard Shortcuts Section -->
+    <section class="section-shortcuts" id="shortcuts">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Shortcuts</span>
+          <h2 class="section-title">Keyboard-First Efficiency</h2>
+          <p class="section-desc">
+            Navigate, search, and paste without lifting your hands from the keyboard.
+          </p>
+        </div>
+
+        <div class="shortcuts-grid">
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Toggle iMemo</span>
+              <span class="shortcut-desc">Open / close clipboard</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">Alt</span>
+              <span class="keycap">V</span>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Navigate History</span>
+              <span class="shortcut-desc">Cycle through items</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">&uarr;</span>
+              <span class="keycap">&darr;</span>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Instant Paste</span>
+              <span class="shortcut-desc">Paste selected clip</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">Enter</span>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Quick Preview</span>
+              <span class="shortcut-desc">Expand snippet view</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">Space</span>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Star Item</span>
+              <span class="shortcut-desc">Pin to favorites</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">Ctrl</span>
+              <span class="keycap">S</span>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <span class="shortcut-title">Dismiss</span>
+              <span class="shortcut-desc">Close HUD</span>
+            </div>
+            <div class="keycaps">
+              <span class="keycap">Esc</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="section-downloads" id="downloads">
+      <div class="container">
+        <div class="section-header center">
+          <span class="section-tag">Installers</span>
+          <h2 class="section-title">Download iMemo</h2>
+          <p class="section-desc">
+            Free, lightweight, and open source. Available for Windows, macOS, and Linux.
+          </p>
+        </div>
+
+        <div class="download-platforms-grid">
+          <!-- Windows Card -->
+          <div class="platform-card" id="card-download-windows">
+            <h3 class="platform-name">Windows</h3>
+            <p class="platform-subtext">
+              Windows 10 &amp; 11.<br />
+              Installer available for x64 architecture.
+            </p>
+            <a 
+              href="https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v0.1.0/iMemo-Smart-Clipboard-Windows-0.1.0-Setup.exe" 
+              class="btn btn-primary platform-cta"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download for Windows</span>
+            </a>
+          </div>
+
+          <!-- macOS Card -->
+          <div class="platform-card" id="card-download-macos">
+            <h3 class="platform-name">macOS</h3>
+            <p class="platform-subtext">
+              Optimized for Apple Silicon &amp; Intel.<br />
+              macOS 12 Monterey and newer.
+            </p>
+            <a 
+              href="https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v0.1.0/iMemo-Smart-Clipboard-Mac-0.1.0.dmg" 
+              class="btn btn-primary platform-cta"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download for macOS</span>
+            </a>
+          </div>
+
+          <!-- Linux Card -->
+          <div class="platform-card" id="card-download-linux">
+            <h3 class="platform-name">Linux</h3>
+            <p class="platform-subtext">
+              Universal binary with AppImage support.<br />
+              Debian and RPM packages.
+            </p>
+            <a 
+              href="https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v0.1.0/iMemo-Smart-Clipboard-Linux-0.1.0.AppImage" 
+              class="btn btn-primary platform-cta"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download for Linux</span>
+            </a>
+            <div class="package-pills">
+              <a href="https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v0.1.0/iMemo-Smart-Clipboard-Linux-0.1.0.deb" class="package-pill-btn">.deb</a>
+              <a href="https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v0.1.0/iMemo-Smart-Clipboard-Linux-0.1.0.rpm" class="package-pill-btn">.rpm</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="specs-bar">
+          <div class="spec-item">&bull; Extremely Lightweight (&lt; 80MB)</div>
+          <div class="spec-item">&bull; Native OS Feel</div>
+          <div class="spec-item">&bull; Privacy First (100% Offline)</div>
+          <div class="spec-item">&bull; Free &amp; Open Source (MIT)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Minimal FAQ Section -->
+    <section class="section-faq" id="faq">
+      <div class="container">
+        <div class="section-header center">
+          <span class="section-tag">FAQ</span>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is my clipboard history sent to any external server?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p>No. Everything stays on your local device. iMemo does not include cloud sync, tracking, or remote telemetry.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Can I customize the global shortcut (Alt + V)?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. You can rebind the hotkey combination in settings to whatever best fits your workflow.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Does it support images and screenshots?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. Whenever you copy an image or take a screenshot, iMemo stores it in your history with a thumbnail preview.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is iMemo free and open source?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. iMemo is released under the permissive MIT License. You can review the source code on GitHub.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final Call to Action -->
+    <section class="section-cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2 class="cta-title">Boost your productivity today.</h2>
+          <p class="cta-desc">Download iMemo Smart Clipboard and transform how you work with data.</p>
+          <a href="#downloads" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download for Free</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Minimal Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <a href="#" class="nav-brand">
+          <img src="assets/images/logo.svg" alt="iMemo Logo" width="22" height="22" />
+          <span>iMemo</span>
+        </a>
+
+        <ul class="footer-nav">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#shortcuts">Shortcuts</a></li>
+          <li><a href="#downloads">Download</a></li>
+          <li><a href="https://github.com/lwshakib/imemo-smart-clipboard" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; <span id="year">2026</span> iMemo Smart Clipboard. All rights reserved.</span>
+        <span>Open Source (MIT License)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
