@@ -1,23 +1,28 @@
-// @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.imemo.smart-clipboard",
+  "productName": "iMemo Smart Clipboard",
+  "copyright": "Copyright © 2026 iMemo",
   "asar": true,
-  "productName": "YourAppName",
-  "directories": {
-    "output": "release/${version}"
-  },
   "files": [
     "dist",
     "dist-electron"
   ],
+  "directories": {
+    "output": "release/${version}",
+    "buildResources": "public"
+  },
   "mac": {
+    "icon": "public/icons/mac/icon.icns",
+    "category": "public.app-category.utilities",
     "target": [
       "dmg"
     ],
-    "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
+    "artifactName": "${productName}-Mac-${version}.${ext}"
   },
   "win": {
+    "publisherName": "Shakib Khan",
+    "icon": "public/icons/win/icon.ico",
     "target": [
       {
         "target": "nsis",
@@ -32,12 +37,23 @@
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "iMemo"
   },
   "linux": {
+    "icon": "public/icons/png",
     "target": [
       "AppImage"
     ],
+    "category": "Utility",
     "artifactName": "${productName}-Linux-${version}.${ext}"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "lwshakib",
+    "repo": "imemo-smart-clipboard",
+    "releaseType": "release"
   }
 }
