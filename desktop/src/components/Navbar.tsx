@@ -45,7 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
             <Icon size={20} />
             
             {isActive && (
-              <span className="absolute bottom-0 left-0 h-[2px] w-full bg-zinc-900 dark:bg-zinc-100" />
+              <span className="nav-active-line" />
             )}
           </button>
         );

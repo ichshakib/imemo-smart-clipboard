@@ -171,16 +171,18 @@ const SearchView: React.FC = () => {
 
   return (
     <div className="flex flex-col p-4 animate-in fade-in duration-500">
-      <div className="sticky top-0 z-10 -mx-4 mb-6 bg-white dark:bg-zinc-950 px-4 pt-1 pb-2">
-        <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" size={18} />
+      <div className="search-container">
+        <div className="search-input-wrapper">
+          <div className="search-input-icon">
+            <SearchIcon size={16} />
+          </div>
           <input 
             type="text" 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Type and press Enter to search..." 
-            className="w-full rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900/50 py-3 pl-10 pr-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-600 focus:border-zinc-300 dark:focus:border-zinc-500/50 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-500/50"
+            className="search-input-field"
           />
         </div>
       </div>

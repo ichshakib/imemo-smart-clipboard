@@ -152,14 +152,30 @@ const StarredView: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchItems(true);
+
     const listener = () => {
       isManualPreview.current = false;
     };
+
+    const historyUpdatedListener = (_event: unknown, updatedHistory?: ClipboardItem[]) => {
+      if (Array.isArray(updatedHistory)) {
+        const starred = updatedHistory.filter((item) => item.isStarred);
+        setItems(starred.slice(0, PAGE_SIZE));
+        hasMoreRef.current = starred.length > PAGE_SIZE;
+        setHasMore(starred.length > PAGE_SIZE);
+      } else {
+        fetchItems(true);
+      }
+    };
+
     window.ipcRenderer.on('preview:hidden', listener);
+    window.ipcRenderer.on('history:updated', historyUpdatedListener);
     return () => {
       window.ipcRenderer.off('preview:hidden', listener);
+      window.ipcRenderer.off('history:updated', historyUpdatedListener);
     };
-  }, []);
+  }, [fetchItems]);
 
   return (
     <div className="flex flex-col p-4 animate-in fade-in duration-500">

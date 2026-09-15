@@ -319,3 +319,225 @@ input[type="text"]:focus {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* --- Navbar Component --- */
+.nav-active-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: var(--accent-green, #10b981);
+  border-radius: 2px 2px 0 0;
+}
+
+/* --- Search Component --- */
+.search-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 4px 0 16px 0;
+  background-color: var(--bg-app);
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-icon {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input-field {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 38px;
+  font-size: 13px;
+  color: var(--text-main);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-input-field::placeholder {
+  color: var(--text-faint);
+}
+
+.search-input-field:focus {
+  border-color: var(--accent-green, #10b981);
+  background-color: var(--bg-app);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+/* --- Settings Component --- */
+.settings-view {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 64px 16px;
+}
+
+.settings-header {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 20px;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.settings-card-group {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.settings-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  transition: background-color 0.15s ease;
+  user-select: none;
+}
+
+.settings-item-row.clickable {
+  cursor: pointer;
+}
+
+.settings-item-row.clickable:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.settings-item-row:not(:last-child) {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: var(--bg-elevated);
+  color: var(--text-body);
+  flex-shrink: 0;
+}
+
+.settings-item-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.settings-item-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Modern Native-like Switch */
+.switch-track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 9999px;
+  background-color: var(--border-medium);
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.switch-track.active {
+  background-color: var(--accent-green, #10b981);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.switch-track.active .switch-thumb {
+  transform: translateX(16px);
+}
+
+/* Shortcut Badge & Buttons */
+.settings-shortcut-badge {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 600;
+  border-radius: 6px;
+  background-color: var(--bg-elevated);
+  color: var(--text-body);
+  border: 1px solid var(--border-subtle);
+}
+
+.settings-shortcut-badge.recording {
+  background-color: var(--accent-green, #10b981);
+  color: #ffffff;
+  border-color: var(--accent-green, #10b981);
+  animation: pulse 1.5s infinite;
+}
+
+.settings-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background-color: var(--bg-elevated);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-btn:hover {
+  background-color: var(--bg-active);
+  border-color: var(--border-medium);
+}
+
+.settings-footer {
+  text-align: center;
+  padding-top: 12px;
+  font-size: 11px;
+  color: var(--text-faint);
+}

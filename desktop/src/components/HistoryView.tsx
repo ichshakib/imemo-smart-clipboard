@@ -149,8 +149,10 @@ const HistoryView: React.FC = () => {
     window.ipcRenderer.send('preview:show', { id: item.id, content: item.content, isManual: true });
   };
 
-  // Add a way to reset manual preview if the window is hidden from elsewhere
+  // Fetch initial history on mount and listen for real-time updates & window events
   useEffect(() => {
+    fetchItems(true);
+
     const hidePreviewListener = () => {
       isManualPreview.current = false;
     };
@@ -159,12 +161,24 @@ const HistoryView: React.FC = () => {
       fetchItems(true);
     };
 
+    const historyUpdatedListener = (_event: unknown, updatedHistory?: ClipboardItem[]) => {
+      if (Array.isArray(updatedHistory)) {
+        setItems(updatedHistory.slice(0, PAGE_SIZE));
+        hasMoreRef.current = updatedHistory.length > PAGE_SIZE;
+        setHasMore(updatedHistory.length > PAGE_SIZE);
+      } else {
+        fetchItems(true);
+      }
+    };
+
     window.ipcRenderer.on('preview:hidden', hidePreviewListener);
     window.ipcRenderer.on('window:shown', windowShownListener);
+    window.ipcRenderer.on('history:updated', historyUpdatedListener);
     
     return () => {
       window.ipcRenderer.off('preview:hidden', hidePreviewListener);
       window.ipcRenderer.off('window:shown', windowShownListener);
+      window.ipcRenderer.off('history:updated', historyUpdatedListener);
     };
   }, [fetchItems]);
 
