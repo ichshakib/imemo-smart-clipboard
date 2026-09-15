@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="stemEmerald" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#064E3B"/>
+    </linearGradient>
+    <linearGradient id="irisEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <g id="imemo-mark-emerald">
+    <path fill-rule="evenodd" clip-rule="evenodd" 
+          d="M 256 43.5 A 45 45 0 1 0 256 133.5 A 45 45 0 1 0 256 43.5 Z M 256 66 A 22.5 22.5 0 1 1 256 111 A 22.5 22.5 0 1 1 256 66 Z" 
+          fill="url(#irisEmerald)"/>
+    <rect x="193.5" y="173.5" width="125" height="295" rx="62.5" fill="url(#stemEmerald)"/>
+  </g>
+</svg>
