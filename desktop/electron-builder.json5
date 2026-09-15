@@ -8,6 +8,12 @@
     "dist",
     "dist-electron"
   ],
+  "extraResources": [
+    {
+      "from": "node_modules/clipboard-event/platform",
+      "to": "platform"
+    }
+  ],
   "directories": {
     "output": "release/${version}",
     "buildResources": "public"

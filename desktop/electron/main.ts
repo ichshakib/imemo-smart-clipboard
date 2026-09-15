@@ -43,6 +43,59 @@ const getIconPath = (): string => {
 };
 
 /**
+ * Utility function to get the theme-adaptive icon path (Windows taskbar & tray, macOS menu bar).
+ */
+const getThemeAdaptiveIconPath = (): string => {
+  const platform = process.platform;
+  const resourceDir = VITE_DEV_SERVER_URL 
+    ? path.join(process.env.APP_ROOT, 'public') 
+    : RENDERER_DIST;
+
+  if (platform === 'win32') {
+    // Windows taskbar/tray: Dark taskbar -> light/white icon; Light taskbar -> dark/black icon
+    const isDark = nativeTheme.shouldUseDarkColors;
+    const iconName = isDark ? 'icon-light.ico' : 'icon-dark.ico';
+    const winIconPath = path.join(resourceDir, 'icons', 'win', iconName);
+    if (fs.existsSync(winIconPath)) {
+      return winIconPath;
+    }
+  } else if (platform === 'darwin') {
+    // macOS menu bar template image
+    const templatePath = path.join(resourceDir, 'icons', 'mac', 'iconTemplate.png');
+    if (fs.existsSync(templatePath)) {
+      return templatePath;
+    }
+  }
+
+  return getIconPath();
+};
+
+const updateThemeAdaptiveIcons = () => {
+  const iconPath = getThemeAdaptiveIconPath();
+  const icon = nativeImage.createFromPath(iconPath);
+
+  if (process.platform === 'darwin') {
+    icon.setTemplateImage(true);
+  }
+
+  if (tray && !tray.isDestroyed()) {
+    try {
+      tray.setImage(icon);
+    } catch (err) {
+      logError('Failed to update tray icon', err);
+    }
+  }
+
+  if (win && !win.isDestroyed()) {
+    try {
+      win.setIcon(icon);
+    } catch (err) {
+      logError('Failed to update taskbar icon', err);
+    }
+  }
+};
+
+/**
  * Utility function to validate if a string is a valid base64-encoded image Data URL.
  */
 const isValidImageDataUrl = (content: string): boolean => {
@@ -148,7 +201,10 @@ function resetWindowPosition() {
 }
 
 function createTray() {
-  const icon = nativeImage.createFromPath(getIconPath())
+  const icon = nativeImage.createFromPath(getThemeAdaptiveIconPath())
+  if (process.platform === 'darwin') {
+    icon.setTemplateImage(true)
+  }
   tray = new Tray(icon)
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show App', click: () => win?.show() },
@@ -162,11 +218,17 @@ function createTray() {
   tray.setToolTip('iMemo Smart Clipboard')
   tray.setContextMenu(contextMenu)
 
+  // Dynamically update taskbar and tray icons if system or app theme changes
+  nativeTheme.on('updated', () => {
+    updateThemeAdaptiveIcons()
+  })
+
   tray.on('click', () => {
     if (win?.isVisible()) {
       win.hide()
     } else {
       lastShowTime = Date.now()
+      checkClipboardChanges()
       resetWindowPosition()
       win?.show()
       win?.focus()
@@ -227,6 +289,7 @@ function toggleWindow() {
   } else {
     if (Date.now() - lastBlurTime > 200) {
       lastShowTime = Date.now()
+      checkClipboardChanges()
       win?.show()
     }
   }
@@ -294,6 +357,164 @@ function showClipboardNotification(content: string) {
   }).show()
 }
 
+let lastClipboardText = ''
+let lastClipboardImage = ''
+let isCheckingClipboard = false
+let clipboardPollTimer: NodeJS.Timeout | null = null
+let nativeWatcherProcess: ReturnType<typeof execFile> | null = null
+
+function checkClipboardChanges() {
+  if (isCheckingClipboard) return
+  isCheckingClipboard = true
+
+  try {
+    const formats = clipboard.availableFormats()
+
+    // 1. First, check if text content exists and is not empty
+    const currentText = clipboard.readText()
+    if (currentText && currentText.trim()) {
+      if (currentText !== lastClipboardText) {
+        const history = (store.get('history') as ClipboardItem[]) || []
+
+        // Avoid duplicate if the latest item in history is already this text
+        if (history.length > 0 && history[0].content === currentText && history[0].type === 'text') {
+          lastClipboardText = currentText
+          return
+        }
+
+        lastClipboardText = currentText
+        lastClipboardImage = ''
+
+        const newItem: ClipboardItem = {
+          id: uuidv4(),
+          content: currentText,
+          type: 'text',
+          timestamp: Date.now(),
+          isStarred: false,
+        }
+
+        const updatedHistory = [newItem, ...history].slice(0, 100)
+        store.set('history', updatedHistory)
+        win?.webContents.send('history:updated', updatedHistory)
+        showClipboardNotification(currentText)
+      }
+      return
+    }
+
+    // 2. If no text, check if an image format is on the clipboard
+    if (formats.includes('image/png') || formats.includes('image/jpeg')) {
+      const currentImage = clipboard.readImage()
+      if (!currentImage.isEmpty()) {
+        const currentDataUrl = currentImage.toDataURL()
+        if (
+          currentDataUrl &&
+          currentDataUrl !== lastClipboardImage &&
+          currentDataUrl !== 'data:image/png;base64,'
+        ) {
+          lastClipboardImage = currentDataUrl
+          lastClipboardText = ''
+
+          const history = (store.get('history') as ClipboardItem[]) || []
+          const newItem: ClipboardItem = {
+            id: uuidv4(),
+            content: currentDataUrl,
+            type: 'image',
+            timestamp: Date.now(),
+            isStarred: false,
+          }
+
+          const updatedHistory = [newItem, ...history].slice(0, 100)
+          store.set('history', updatedHistory)
+          win?.webContents.send('history:updated', updatedHistory)
+          showClipboardNotification('Image copied to clipboard')
+        }
+      }
+    }
+  } catch (error) {
+    logError('Error checking clipboard changes', error)
+  } finally {
+    isCheckingClipboard = false
+  }
+}
+
+function startClipboardMonitoring() {
+  // Initialize baseline state
+  try {
+    lastClipboardText = clipboard.readText() || ''
+    const currentImage = clipboard.readImage()
+    if (!currentImage.isEmpty()) {
+      lastClipboardImage = currentImage.toDataURL()
+    }
+  } catch (err) {
+    logError('Failed to read initial clipboard baseline', err)
+  }
+
+  // 1. Continuous polling interval (every 400ms):
+  // Works reliably in dev and production without relying on child processes
+  if (clipboardPollTimer) {
+    clearInterval(clipboardPollTimer)
+  }
+  clipboardPollTimer = setInterval(checkClipboardChanges, 400)
+
+  // 2. Native watcher process for zero-delay event-driven notifications
+  try {
+    const platform = process.platform
+    const exeNames: Record<string, string> = {
+      win32: 'clipboard-event-handler-win32.exe',
+      darwin: 'clipboard-event-handler-mac',
+      linux: 'clipboard-event-handler-linux',
+    }
+    const exeName = exeNames[platform]
+
+    if (exeName) {
+      const candidatePaths = [
+        path.join(process.resourcesPath || '', 'platform', exeName),
+        path.join(process.resourcesPath || '', 'app.asar.unpacked', 'node_modules', 'clipboard-event', 'platform', exeName),
+        path.join(process.env.APP_ROOT || app.getAppPath(), 'node_modules', 'clipboard-event', 'platform', exeName),
+        path.join(__dirname, 'platform', exeName),
+        path.join(__dirname, '..', 'platform', exeName),
+      ]
+
+      let resolvedExe = ''
+      for (const candidate of candidatePaths) {
+        if (fs.existsSync(candidate)) {
+          resolvedExe = candidate
+          break
+        }
+      }
+
+      if (resolvedExe) {
+        nativeWatcherProcess = execFile(resolvedExe)
+        nativeWatcherProcess.stdout?.on('data', (data) => {
+          if (data.toString().includes('CLIPBOARD_CHANGE')) {
+            checkClipboardChanges()
+          }
+        })
+        nativeWatcherProcess.on('error', (err) => {
+          console.warn('Native clipboard watcher process error (polling remains active):', err.message)
+        })
+      }
+    }
+  } catch (err) {
+    console.warn('Native clipboard watcher failed to start (polling remains active):', err)
+  }
+
+  app.on('before-quit', () => {
+    if (clipboardPollTimer) {
+      clearInterval(clipboardPollTimer)
+      clipboardPollTimer = null
+    }
+    if (nativeWatcherProcess) {
+      try {
+        nativeWatcherProcess.kill()
+      } catch (err) {
+        logError('Failed to kill native watcher process on exit', err)
+      }
+      nativeWatcherProcess = null
+    }
+  })
+}
+
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay()
   const { width, height, x: screenX, y: screenY } = primaryDisplay.workArea
@@ -304,7 +525,7 @@ function createWindow() {
     height: WINDOW_HEIGHT,
     x: screenX + width - WINDOW_WIDTH,
     y: screenY + height - WINDOW_HEIGHT,
-    icon: getIconPath(),
+    icon: getThemeAdaptiveIconPath(),
     frame: false,
     resizable: false,
     alwaysOnTop: true,
@@ -330,6 +551,7 @@ function createWindow() {
 
   // Notify renderer when window is shown
   win.on('show', () => {
+    checkClipboardChanges()
     win?.webContents.send('window:shown')
   })
 
@@ -440,81 +662,7 @@ app.whenReady().then(() => {
   }
 
   // Start clipboard monitoring
-  import('clipboard-event').then((clipboardWatcher) => {
-    const watcher = clipboardWatcher.default
-    watcher.start()
-
-    let lastText = ''
-    let lastImage = ''
-
-    try {
-      lastText = clipboard.readText()
-      lastImage = clipboard.readImage().toDataURL()
-    } catch (error) {
-      logError('Failed to read initial clipboard content', error)
-    }
-
-    watcher.on('copy', () => {
-      try {
-        const formats = clipboard.availableFormats()
-        
-        if (formats.includes('image/png') || formats.includes('image/jpeg')) {
-          const currentImage = clipboard.readImage()
-          const currentDataUrl = currentImage.toDataURL()
-          
-          if (currentDataUrl && currentDataUrl !== lastImage && currentDataUrl !== 'data:image/png;base64,') {
-            lastImage = currentDataUrl
-            try {
-              lastText = clipboard.readText()
-            } catch (err) {
-              logError('Failed to update lastText on image copy', err)
-            }
-            
-            const history = store.get('history') as ClipboardItem[]
-            
-            const newItem: ClipboardItem = {
-              id: uuidv4(),
-              content: currentDataUrl,
-              type: 'image',
-              timestamp: Date.now(),
-              isStarred: false,
-            }
-            
-            const updatedHistory = [newItem, ...history].slice(0, 100)
-            store.set('history', updatedHistory)
-            win?.webContents.send('history:updated', updatedHistory)
-            showClipboardNotification('Image copied to clipboard')
-          }
-        } else {
-          const currentText = clipboard.readText()
-          if (currentText && currentText !== lastText) {
-            lastText = currentText
-            lastImage = ''
-            
-            const history = store.get('history') as ClipboardItem[]
-            if (history.length > 0 && history[0].content === currentText && history[0].type === 'text') return
-            
-            const newItem: ClipboardItem = {
-              id: uuidv4(),
-              content: currentText,
-              type: 'text',
-              timestamp: Date.now(),
-              isStarred: false,
-            }
-            
-            const updatedHistory = [newItem, ...history].slice(0, 100)
-            store.set('history', updatedHistory)
-            win?.webContents.send('history:updated', updatedHistory)
-            showClipboardNotification(currentText)
-          }
-        }
-      } catch (error) {
-        logError('Error handling clipboard event', error)
-      }
-    })
-  }).catch((error) => {
-    logError('Failed to load clipboard-event watcher', error)
-  })
+  startClipboardMonitoring()
 
   // Enable Hotkey
   registerHotkey()
@@ -615,6 +763,7 @@ ipcMain.handle('settings:update', (_event, newSettings: Settings) => {
     
     // Update Electron's native theme source
     nativeTheme.themeSource = newSettings.theme || 'system'
+    updateThemeAdaptiveIcons()
     
     // Notify renderer about the update (for theme switching, etc)
     win?.webContents.send('settings:updated', newSettings)
@@ -638,8 +787,10 @@ ipcMain.on('clipboard:paste-item', (_event, item: { content: string, type: 'text
         logError('Created nativeImage is empty in clipboard:paste-item handler')
         return
       }
+      lastClipboardImage = item.content
       clipboard.writeImage(image)
     } else {
+      lastClipboardText = item.content
       clipboard.writeText(item.content)
     }
     
