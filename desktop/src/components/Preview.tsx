@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Copy, Check } from 'lucide-react';
 
 const Preview: React.FC = () => {
   const [content, setContent] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Get ID from URL
@@ -22,7 +23,7 @@ const Preview: React.FC = () => {
 
     fetchInitialContent();
 
-    const listener = (_: Electron.IpcRendererEvent, payload: { id: string, content: string }) => {
+    const listener = (_: unknown, payload: { id: string, content: string }) => {
       if (isManualParam) {
         if (payload.id === windowId) {
           setContent(payload.content);
@@ -46,6 +47,25 @@ const Preview: React.FC = () => {
     };
   }, []);
 
+  // Send content height resize request to main process
+  useEffect(() => {
+    if (content !== null && content !== undefined) {
+      const reportHeight = () => {
+        if (!bodyRef.current) return;
+        const scrollH = bodyRef.current.scrollHeight;
+        // Header height (34px) + body padding/borders (2px) + scrollH
+        const totalHeight = 34 + 2 + scrollH;
+        const params = new URLSearchParams(window.location.search);
+        const windowId = params.get('id');
+        window.ipcRenderer.send('preview:resize', { id: windowId, height: totalHeight });
+      };
+
+      requestAnimationFrame(reportHeight);
+      const timer = setTimeout(reportHeight, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [content]);
+
   const handleCopy = () => {
     if (!content) return;
     navigator.clipboard.writeText(content);
@@ -61,22 +81,24 @@ const Preview: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white dark:bg-zinc-950 shadow-2xl text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-white/10">
-      {/* Draggable Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 dark:bg-white/5 cursor-move drag border-b border-zinc-200 dark:border-white/5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Preview</span>
-        <div className="flex items-center gap-2 no-drag">
+    <div className="preview-container">
+      {/* Header */}
+      <div className="preview-header drag">
+        <span className="preview-title">Preview</span>
+        <div className="preview-header-actions no-drag">
           <button 
+            type="button"
             onClick={handleCopy}
-            className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-white/5 rounded-md transition-all disabled:opacity-30"
+            className="preview-action-btn"
             title="Copy content"
             disabled={!content}
           >
             {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
           </button>
           <button 
+            type="button"
             onClick={handleClose}
-            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-all"
+            className="preview-action-btn close"
             title="Close"
           >
             <X size={14} />
@@ -84,27 +106,37 @@ const Preview: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-2 select-text no-drag">
+      {/* Body with Content and Padding */}
+      <div ref={bodyRef} className="preview-body no-drag">
         {content === null ? (
-          <div className="flex items-center justify-center h-full text-zinc-400 dark:text-zinc-600 text-xs animate-pulse">
+          <div className="flex items-center justify-center h-full text-zinc-400 text-xs animate-pulse">
             Loading preview...
           </div>
         ) : content === '' ? (
-          <div className="flex items-center justify-center h-full text-zinc-400 dark:text-zinc-600 text-xs italic">
+          <div className="flex items-center justify-center h-full text-zinc-400 text-xs italic">
             No content to display
           </div>
         ) : content.startsWith('data:image/') ? (
-          <div className="flex items-center justify-center h-full w-full">
+          <div className="preview-image-container">
             <img 
               src={content} 
               alt="Preview" 
-              className="max-w-full max-h-full object-contain rounded shadow-sm" 
+              className="preview-image" 
+              onLoad={() => {
+                if (bodyRef.current) {
+                  const scrollH = bodyRef.current.scrollHeight;
+                  const totalHeight = 34 + 2 + scrollH;
+                  const params = new URLSearchParams(window.location.search);
+                  const windowId = params.get('id');
+                  window.ipcRenderer.send('preview:resize', { id: windowId, height: totalHeight });
+                }
+              }}
             />
           </div>
         ) : (
-          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 selection:bg-sky-500/30 min-h-full">
+          <pre className="preview-text">
             {content}
-          </p>
+          </pre>
         )}
       </div>
     </div>

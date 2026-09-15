@@ -183,8 +183,22 @@ const contentCache = new Map<string, string>()
 let lastHoverContent: string = ''
 let tray: Tray | null = null
 
-const WINDOW_WIDTH = 400
-const WINDOW_HEIGHT = 600
+const WINDOW_WIDTH = 300
+const WINDOW_HEIGHT = 400
+
+const PREVIEW_WIDTH = 300
+const PREVIEW_MIN_HEIGHT = 100
+const PREVIEW_MAX_HEIGHT = 400
+
+function calculateInitialPreviewHeight(content: string): number {
+  if (!content) return 120
+  if (content.startsWith('data:image/')) return 240
+  const lines = content.split(/\r\n|\r|\n/).length
+  const charLines = Math.ceil(content.length / 32)
+  const effectiveLines = Math.max(lines, charLines)
+  const needed = 38 + 28 + (effectiveLines * 18)
+  return Math.min(PREVIEW_MAX_HEIGHT, Math.max(PREVIEW_MIN_HEIGHT, needed))
+}
 
 let lastBlurTime = 0
 let lastShowTime = 0
@@ -224,18 +238,29 @@ function createTray() {
   })
 
   tray.on('click', () => {
-    if (win?.isVisible()) {
+    if (!win) return
+
+    // If window is currently visible, hide it
+    if (win.isVisible()) {
+      lastBlurTime = Date.now()
       win.hide()
-    } else {
-      lastShowTime = Date.now()
-      checkClipboardChanges()
-      resetWindowPosition()
-      win?.show()
-      win?.focus()
-      // Ensure it's on top
-      win?.setAlwaysOnTop(true, 'screen-saver')
-      setTimeout(() => win?.setAlwaysOnTop(true), 100)
+      return
     }
+
+    // If the window was blurred within the last 400ms, the tray click is what triggered
+    // the blur event just milliseconds prior. Do not reopen the window.
+    if (Date.now() - lastBlurTime < 400) {
+      return
+    }
+
+    lastShowTime = Date.now()
+    checkClipboardChanges()
+    resetWindowPosition()
+    win.show()
+    win.focus()
+    // Ensure it's on top
+    win.setAlwaysOnTop(true, 'screen-saver')
+    setTimeout(() => win?.setAlwaysOnTop(true), 100)
   })
 }
 
@@ -574,20 +599,24 @@ function createWindow() {
 }
 
 function createPreviewWindow(id: string, content: string, isManual: boolean) {
-  const previewWidth = 500
-  const previewHeight = 400
+  const previewWidth = PREVIEW_WIDTH
+  const previewHeight = calculateInitialPreviewHeight(content)
   
   const previewWin = new BrowserWindow({
     width: previewWidth,
     height: previewHeight,
+    minWidth: 260,
+    maxWidth: 450,
+    minHeight: PREVIEW_MIN_HEIGHT,
+    maxHeight: PREVIEW_MAX_HEIGHT,
     frame: false,
     resizable: true,
     movable: true,
     alwaysOnTop: true,
     show: false,
     skipTaskbar: true,
-    transparent: true,
-    backgroundColor: '#00000000',
+    transparent: false,
+    backgroundColor: '#09090b',
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
@@ -825,52 +854,79 @@ ipcMain.on('preview:show', (_event, { id, content, isManual }: { id: string, con
     contentCache.set(id, content)
     if (!isManual) lastHoverContent = content
     
+    const height = calculateInitialPreviewHeight(content)
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const { width: screenWidth, height: screenHeight, x: screenX, y: screenY } = primaryDisplay.workArea
+    const mainWinY = screenY + screenHeight - WINDOW_HEIGHT
+
     if (isManual) {
-      // Hide hover window if it's open
       if (hoverPreviewWin) {
         hoverPreviewWin.hide()
       }
 
-      // If window for this ID already exists, focus it
       if (manualPreviewWins.has(id)) {
         const pWin = manualPreviewWins.get(id)
-        pWin?.show()
-        pWin?.focus()
-        return
+        if (pWin && !pWin.isDestroyed()) {
+          pWin.show()
+          pWin.focus()
+          return
+        }
       }
 
       const pWin = createPreviewWindow(id, content, true)
       manualPreviewWins.set(id, pWin)
 
-      const primaryDisplay = screen.getPrimaryDisplay()
-      const { width: screenWidth, height: screenHeight, x: screenX, y: screenY } = primaryDisplay.workArea
-      
-      // Offset based on number of windows
-      const offset = manualPreviewWins.size * 20
-      const x = screenX + screenWidth - 500 - offset
-      const y = screenY + screenHeight - WINDOW_HEIGHT - 400 - 10 - offset
-      
-      pWin.setPosition(x, y)
+      const offset = manualPreviewWins.size * 16
+      const x = screenX + screenWidth - PREVIEW_WIDTH - offset
+      let y = mainWinY - height - 8 - offset
+      if (y < screenY + 10) y = screenY + 10
+
+      pWin.setBounds({ x, y, width: PREVIEW_WIDTH, height })
       pWin.show()
     } else {
-      // Hover preview (only one at a time)
-      if (!hoverPreviewWin) {
+      if (!hoverPreviewWin || hoverPreviewWin.isDestroyed()) {
         hoverPreviewWin = createPreviewWindow(id, content, false)
       }
 
-      const primaryDisplay = screen.getPrimaryDisplay()
-      const { width: screenWidth, height: screenHeight, x: screenX, y: screenY } = primaryDisplay.workArea
-      
-      const x = screenX + screenWidth - 500
-      const mainWinY = screenY + screenHeight - WINDOW_HEIGHT
-      const y = mainWinY - 400 - 10
-      
-      hoverPreviewWin.setPosition(x, y)
+      const x = screenX + screenWidth - PREVIEW_WIDTH
+      let y = mainWinY - height - 8
+      if (y < screenY + 10) y = screenY + 10
+
+      hoverPreviewWin.setBounds({ x, y, width: PREVIEW_WIDTH, height })
       hoverPreviewWin.webContents.send('preview:content', { id, content })
       hoverPreviewWin.showInactive()
     }
   } catch (error) {
     logError('Error in preview:show handler', error, { id })
+  }
+})
+
+ipcMain.on('preview:resize', (_event, { id, height }: { id?: string, height: number }) => {
+  try {
+    const targetWin = (id && manualPreviewWins.has(id)) 
+      ? manualPreviewWins.get(id) 
+      : hoverPreviewWin
+
+    if (!targetWin || targetWin.isDestroyed()) return
+
+    const clampedHeight = Math.min(PREVIEW_MAX_HEIGHT, Math.max(PREVIEW_MIN_HEIGHT, Math.round(height)))
+    const currentBounds = targetWin.getBounds()
+    if (Math.abs(currentBounds.height - clampedHeight) < 4) return
+
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const { height: screenHeight, y: screenY } = primaryDisplay.workArea
+    const mainWinY = screenY + screenHeight - WINDOW_HEIGHT
+    let y = mainWinY - clampedHeight - 8
+    if (y < screenY + 10) y = screenY + 10
+
+    targetWin.setBounds({
+      x: currentBounds.x,
+      y,
+      width: currentBounds.width,
+      height: clampedHeight
+    })
+  } catch (error) {
+    logError('Error in preview:resize handler', error, { id })
   }
 })
 
