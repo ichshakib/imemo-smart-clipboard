@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Trash2, Star, Loader2, Maximize2 } from 'lucide-react';
+import { Trash2, Star, Loader2, Maximize2, Clock } from 'lucide-react';
 
 interface ClipboardItem {
   id: string;
@@ -99,12 +99,18 @@ const HistoryView: React.FC = () => {
     setItems(items.map(item => item.id === id ? { ...item, isStarred: !item.isStarred } : item));
   };
 
+  const getSnippet = (text: string) => {
+    if (!text) return '';
+    const singleLine = text.replace(/[\r\n\t]+/g, ' ').trim();
+    return singleLine.length > 140 ? singleLine.slice(0, 140) + '…' : singleLine;
+  };
+
   const formatTime = (timestamp: number) => {
     const diff = Math.floor((Date.now() - timestamp) / 60000);
     if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff} mins ago`;
+    if (diff < 60) return `${diff}m ago`;
     const hours = Math.floor(diff / 60);
-    if (hours < 24) return `${hours} hours ago`;
+    if (hours < 24) return `${hours}h ago`;
     return new Date(timestamp).toLocaleDateString();
   };
 
@@ -183,14 +189,15 @@ const HistoryView: React.FC = () => {
   }, [fetchItems]);
 
   return (
-    <div className="flex flex-col p-4 animate-in fade-in duration-500">
+    <div className="flex flex-col">
       {items.length === 0 && !isLoading ? (
-        <div className="flex flex-col items-center justify-center p-10 text-center text-zinc-400 dark:text-zinc-500">
-          <p className="text-sm">History is empty</p>
-          <p className="text-[10px] mt-1">Copied text and images will appear here</p>
+        <div className="empty-state-box">
+          <Clock size={22} className="empty-state-icon" />
+          <p className="empty-state-title">History is empty</p>
+          <p className="empty-state-desc">Copied items will appear here</p>
         </div>
       ) : (
-        <div className="space-y-3 pb-8">
+        <div className="clipboard-list-container">
           {items.map((item) => (
             <div 
               key={item.id} 
@@ -198,10 +205,10 @@ const HistoryView: React.FC = () => {
               onMouseEnter={() => handleMouseEnter(item)}
               onMouseMove={() => handleMouseMove(item)}
               onMouseLeave={() => handleMouseLeave(item)}
-              className="group relative cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900/50 p-4 transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800/80 active:scale-[0.98]"
+              className="clipboard-card"
             >
               {item.type === 'image' ? (
-                <div className="mb-2 max-h-40 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                <div className="clipboard-card-image">
                   <img 
                     src={item.content} 
                     alt="Clipboard item" 
@@ -209,33 +216,40 @@ const HistoryView: React.FC = () => {
                   />
                 </div>
               ) : (
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-1">{item.content}</p>
+                <p className="clipboard-card-text">
+                  {getSnippet(item.content)}
+                </p>
               )}
               
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">{formatTime(item.timestamp)}</span>
+              <div className="clipboard-card-footer">
+                <span className="timestamp-text">{formatTime(item.timestamp)}</span>
                 
-                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="clipboard-card-actions">
                   {item.type !== 'image' && (
                     <button 
+                      type="button"
                       onClick={(e) => handleOpenPreview(e, item)}
-                      className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                      className="clipboard-action-btn"
                       title="Preview"
                     >
-                      <Maximize2 size={14} />
+                      <Maximize2 size={13} />
                     </button>
                   )}
                   <button 
+                    type="button"
                     onClick={(e) => handleToggleStar(e, item.id)}
-                    className={`transition-colors ${item.isStarred ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                    className={`clipboard-action-btn ${item.isStarred ? 'starred' : ''}`}
+                    title={item.isStarred ? "Starred" : "Star"}
                   >
-                    <Star size={14} fill={item.isStarred ? "currentColor" : "none"} />
+                    <Star size={13} fill={item.isStarred ? "currentColor" : "none"} />
                   </button>
                   <button 
+                    type="button"
                     onClick={(e) => handleRemove(e, item.id)}
-                    className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                    className="clipboard-action-btn delete"
+                    title="Delete"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </div>
@@ -244,15 +258,12 @@ const HistoryView: React.FC = () => {
           
           {/* Scroll Target & End Indicator */}
           {hasMore ? (
-            <div ref={observerTargetRef} className="h-20 flex items-center justify-center">
-              {isLoading && <Loader2 className="animate-spin text-zinc-600" size={20} />}
+            <div ref={observerTargetRef} className="loading-indicator">
+              {isLoading && <Loader2 className="animate-spin" size={16} />}
             </div>
           ) : items.length > 0 ? (
-            <div className="pt-10 pb-20 flex flex-col items-center justify-center text-center">
-              <div className="h-[1px] w-12 bg-zinc-200 dark:bg-zinc-800 mb-4" />
-              <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-600">
-                End of history
-              </p>
+            <div className="end-indicator">
+              <span>End of history</span>
             </div>
           ) : null}
         </div>

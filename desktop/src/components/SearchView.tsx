@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search as SearchIcon, Trash2, Star, Loader2, Maximize2 } from 'lucide-react';
+import { Search as SearchIcon, Trash2, Star, Loader2, Maximize2, X } from 'lucide-react';
 
 interface ClipboardItem {
   id: string;
@@ -14,7 +14,6 @@ const PAGE_SIZE = 20;
 const SearchView: React.FC = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ClipboardItem[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const isLoadingRef = useRef(false);
@@ -23,7 +22,6 @@ const SearchView: React.FC = () => {
   const queryRef = useRef('');
   const observer = useRef<IntersectionObserver | null>(null);
 
-  // Keep refs in sync with state
   useEffect(() => {
     resultsRef.current = results;
   }, [results]);
@@ -41,24 +39,33 @@ const SearchView: React.FC = () => {
   }, [hasMore]);
 
   const fetchResults = useCallback(async (isInitial = false) => {
+    const trimmed = queryRef.current.trim();
+    if (!trimmed) {
+      setResults([]);
+      setHasMore(false);
+      return;
+    }
+
     if (isLoadingRef.current || (!hasMoreRef.current && !isInitial)) return;
-    if (!queryRef.current.trim()) return;
 
     isLoadingRef.current = true;
     setIsLoading(true);
     const offset = isInitial ? 0 : resultsRef.current.length;
 
     try {
-      const result = await window.ipcRenderer.invoke('history:search', { query: queryRef.current, offset, limit: PAGE_SIZE });
+      const result = await window.ipcRenderer.invoke('history:search', { 
+        query: trimmed, 
+        offset, 
+        limit: PAGE_SIZE 
+      });
       
       if (isInitial) {
-        setResults(result.items);
+        setResults(result.items || []);
       } else {
-        setResults(prev => [...prev, ...result.items]);
+        setResults(prev => [...prev, ...(result.items || [])]);
       }
-      hasMoreRef.current = result.hasMore;
-      setHasMore(result.hasMore);
-      setHasSearched(true);
+      hasMoreRef.current = !!result.hasMore;
+      setHasMore(!!result.hasMore);
     } catch (error) {
       console.error('Failed to search history:', error);
     } finally {
@@ -66,6 +73,20 @@ const SearchView: React.FC = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Debounced live search only when typing
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setHasMore(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      fetchResults(true);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [query, fetchResults]);
 
   const observerTargetRef = useCallback((node: HTMLDivElement | null) => {
     if (observer.current) observer.current.disconnect();
@@ -82,14 +103,6 @@ const SearchView: React.FC = () => {
       observer.current.observe(node);
     }
   }, [fetchResults]);
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      setHasMore(true); // Reset hasMore for new search
-      setResults([]);   // Clear old results
-      fetchResults(true);
-    }
-  };
 
   const handleItemClick = (item: ClipboardItem) => {
     window.ipcRenderer.send('clipboard:paste-item', { content: item.content, type: item.type || 'text' });
@@ -160,113 +173,133 @@ const SearchView: React.FC = () => {
     };
   }, []);
 
+  const getSnippet = (text: string) => {
+    if (!text) return '';
+    return text.replace(/[\r\n\t]+/g, ' ').trim();
+  };
+
   const formatTime = (timestamp: number) => {
     const diff = Math.floor((Date.now() - timestamp) / 60000);
     if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff} mins ago`;
+    if (diff < 60) return `${diff}m ago`;
     const hours = Math.floor(diff / 60);
-    if (hours < 24) return `${hours} hours ago`;
+    if (hours < 24) return `${hours}h ago`;
     return new Date(timestamp).toLocaleDateString();
   };
 
   return (
-    <div className="flex flex-col p-4 animate-in fade-in duration-500">
-      <div className="search-container">
-        <div className="search-input-wrapper">
-          <div className="search-input-icon">
-            <SearchIcon size={16} />
+    <div className="flex flex-col">
+      {/* Search Bar Container */}
+      <div className="search-header-bar">
+        <div className="search-input-box">
+          <div className="search-input-icon-svg">
+            <SearchIcon size={14} />
           </div>
           <input 
             type="text" 
+            autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Type and press Enter to search..." 
-            className="search-input-field"
+            placeholder="Search clipboard..." 
+            className="search-field-input"
           />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="search-clear-btn"
+              title="Clear"
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="space-y-3 pb-8">
-        {hasSearched && results.length === 0 && !isLoading ? (
-          <div className="flex flex-col items-center justify-center pt-10 text-center">
-            <p className="text-sm text-zinc-400 dark:text-zinc-500">No matches found for "{query}"</p>
-          </div>
-        ) : (
-          <>
-            {results.map((item) => (
-              <div 
-                key={item.id} 
-                onClick={() => handleItemClick(item)}
-                onMouseEnter={() => handleMouseEnter(item)}
-                onMouseMove={() => handleMouseMove(item)}
-                onMouseLeave={() => handleMouseLeave(item)}
-                className="group relative cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900/50 p-4 transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800/80 active:scale-[0.98]"
-              >
-                {item.type === 'image' ? (
-                  <div className="mb-2 max-h-40 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                    <img 
-                      src={item.content} 
-                      alt="Clipboard item" 
-                      className="w-full object-contain"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-1">{item.content}</p>
-                )}
+      {/* Content Area */}
+      {!query.trim() ? (
+        <div className="empty-state-box">
+          <SearchIcon size={24} className="empty-state-icon" />
+          <p className="empty-state-title">Search Clipboard</p>
+          <p className="empty-state-desc">Type keywords to find text or images in your history</p>
+        </div>
+      ) : results.length === 0 && !isLoading ? (
+        <div className="empty-state-box">
+          <p className="empty-state-title">No matches found</p>
+          <p className="empty-state-desc">No items matched &ldquo;{query}&rdquo;</p>
+        </div>
+      ) : (
+        <div className="clipboard-list-container">
+          {results.map((item) => (
+            <div 
+              key={item.id} 
+              onClick={() => handleItemClick(item)}
+              onMouseEnter={() => handleMouseEnter(item)}
+              onMouseMove={() => handleMouseMove(item)}
+              onMouseLeave={() => handleMouseLeave(item)}
+              className="clipboard-card"
+            >
+              {item.type === 'image' ? (
+                <div className="clipboard-card-image">
+                  <img 
+                    src={item.content} 
+                    alt="Clipboard item" 
+                    className="w-full object-contain"
+                  />
+                </div>
+              ) : (
+                <p className="clipboard-card-text">
+                  {getSnippet(item.content)}
+                </p>
+              )}
+              
+              <div className="clipboard-card-footer">
+                <span className="timestamp-text">{formatTime(item.timestamp)}</span>
                 
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">{formatTime(item.timestamp)}</span>
-                  
-                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {item.type !== 'image' && (
-                      <button 
-                        onClick={(e) => handleOpenPreview(e, item)}
-                        className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                        title="Preview"
-                      >
-                        <Maximize2 size={14} />
-                      </button>
-                    )}
+                <div className="clipboard-card-actions">
+                  {item.type !== 'image' && (
                     <button 
-                      onClick={(e) => handleToggleStar(e, item.id)}
-                      className={`transition-colors ${item.isStarred ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                      type="button"
+                      onClick={(e) => handleOpenPreview(e, item)}
+                      className="clipboard-action-btn"
+                      title="Preview"
                     >
-                      <Star size={14} fill={item.isStarred ? "currentColor" : "none"} />
+                      <Maximize2 size={13} />
                     </button>
-                    <button 
-                      onClick={(e) => handleRemove(e, item.id)}
-                      className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  )}
+                  <button 
+                    type="button"
+                    onClick={(e) => handleToggleStar(e, item.id)}
+                    className={`clipboard-action-btn ${item.isStarred ? 'starred' : ''}`}
+                    title={item.isStarred ? "Starred" : "Star"}
+                  >
+                    <Star size={13} fill={item.isStarred ? "currentColor" : "none"} />
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={(e) => handleRemove(e, item.id)}
+                    className="clipboard-action-btn delete"
+                    title="Delete"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
 
-            {/* Scroll Target & End Indicator */}
-            {hasMore ? (
-              <div ref={observerTargetRef} className="h-20 flex items-center justify-center">
-                {isLoading && <Loader2 className="animate-spin text-zinc-600" size={20} />}
-              </div>
-            ) : results.length > 0 ? (
-              <div className="pt-10 pb-20 flex flex-col items-center justify-center text-center">
-                <div className="h-[1px] w-12 bg-zinc-200 dark:bg-zinc-800 mb-4" />
-                <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-600">
-                  End of results
-                </p>
-              </div>
-            ) : null}
-          </>
-        )}
-        
-        {!hasSearched && !isLoading && (
-          <div className="flex flex-col items-center justify-center pt-10 text-center">
-            <p className="text-sm text-zinc-400 dark:text-zinc-500">Search through your local clipboard history.</p>
-          </div>
-        )}
-      </div>
+          {/* Scroll Target & End Indicator */}
+          {hasMore ? (
+            <div ref={observerTargetRef} className="loading-indicator">
+              {isLoading && <Loader2 className="animate-spin" size={16} />}
+            </div>
+          ) : results.length > 0 ? (
+            <div className="end-indicator">
+              <span>End of results</span>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };

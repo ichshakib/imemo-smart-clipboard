@@ -47,18 +47,14 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans transition-colors duration-300">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans">
       {!isPreviewMode && <Navbar activeTab={activeTab} onTabChange={setActiveTab} />}
       
       <main className="flex-1 overflow-y-auto no-drag">
-        <div className={isPreviewMode ? "h-full" : "mx-auto w-full max-w-lg"}>
+        <div className={isPreviewMode ? "h-full" : "w-full"}>
           {renderView()}
         </div>
       </main>
-      
-      {!isPreviewMode && (
-        <div className="pointer-events-none fixed bottom-0 left-0 h-12 w-full bg-gradient-to-t from-white dark:from-zinc-950 to-transparent opacity-60" />
-      )}
     </div>
   )
 }
