@@ -31,6 +31,26 @@ The project includes:
 
 ---
 
+## 📸 Application Showcase
+
+Experience a clean, distraction-free HUD crafted with a pure monochrome zinc design system:
+
+### 🌙 Dark Mode (Default)
+
+| History Feed | Starred Vault | Instant Search | Settings & Preferences |
+| :---: | :---: | :---: | :---: |
+| <img src="assets/app_demos/01.png" width="210" alt="iMemo History View (Dark)" /> | <img src="assets/app_demos/02.png" width="210" alt="iMemo Starred View (Dark)" /> | <img src="assets/app_demos/03.png" width="210" alt="iMemo Search View (Dark)" /> | <img src="assets/app_demos/04.png" width="210" alt="iMemo Settings View (Dark)" /> |
+| Infinite history feed with relative timestamps | Pin recurring boilerplate & tokens | Instant live filtering across history | Hotkey recorder & system startup toggles |
+
+### ☀️ Light Mode
+
+| History Feed (Images & Text) | Starred Vault | Instant Search | Settings & Preferences |
+| :---: | :---: | :---: | :---: |
+| <img src="assets/app_demos/05.png" width="210" alt="iMemo History View (Light)" /> | <img src="assets/app_demos/06.png" width="210" alt="iMemo Starred View (Light)" /> | <img src="assets/app_demos/07.png" width="210" alt="iMemo Search View (Light)" /> | <img src="assets/app_demos/08.png" width="210" alt="iMemo Settings View (Light)" /> |
+| Native clipboard image & screenshot cache | High-contrast pinned snippet vault | Sub-millisecond keyword search | Customizable shortcuts & notifications |
+
+---
+
 ## ✨ Features
 
 - **⚡ Smart Multi-Format Capture**: Automatically detects and timestamps copied text, code fragments, color hex codes, and clipboard images.
@@ -159,7 +179,8 @@ imemo-smart-clipboard/
 │   ├── public/               # Application icons (mac, win, png) & branding assets
 │   ├── electron-builder.json5# Multi-platform distribution configuration
 │   └── package.json          # Desktop dependencies & scripts
-├── assets/                   # Web landing page assets
+├── assets/                   # Web landing page and repository assets
+│   ├── app_demos/            # Application screenshot previews (dark & light modes)
 │   ├── css/style.css         # Responsive monochrome zinc design system
 │   ├── js/main.js            # Client-side OS detection, theme switcher, FAQ accordion
 │   └── images/               # Branding logos and multi-resolution favicons
