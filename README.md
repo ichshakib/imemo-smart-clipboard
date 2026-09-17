@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="assets/images/logo.svg" width="72" height="72" alt="iMemo Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/images/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/images/logo-light.svg">
+    <img src="assets/images/logo.svg" width="72" height="72" alt="iMemo Logo">
+  </picture>
 </p>
 
 <h1 align="center">iMemo Smart Clipboard</h1>
@@ -38,6 +42,47 @@ The project includes:
 - **👁️ Dedicated Preview Window**: Inspect long snippets, multi-line JSON, SQL queries, or full-resolution images before pasting.
 - **🛡️ 100% Local & Air-Gapped**: Zero network requests, zero telemetry beacons, and zero cloud sync leaks. Everything is stored on your local disk.
 - **🪶 Ultra-Lightweight**: Zero TailwindCSS bloat. Complete UI bundle parses in under 1 millisecond.
+
+---
+
+## 🏗️ Architecture & Workflow
+
+The diagram below illustrates how **iMemo** continuously monitors the system clipboard, categorizes multi-format clips, manages local air-gapped persistence, and performs instant native keystroke paste simulation:
+
+```mermaid
+flowchart TD
+    subgraph Capture ["1. Multi-Format Clipboard Capture"]
+        OSCopy["User Copies Content<br/>(Text, Code, URLs, Images)"] --> Listener["Clipboard Monitor<br/>(Native Event Watcher + 400ms Poller)"]
+        Listener --> Classifier{"Format Classifier"}
+        Classifier -->|Text / Snippets| Sanitize["Sanitized Text Item"]
+        Classifier -->|PNG / JPEG Stream| NativeImg["Native Image DataURL"]
+    end
+
+    subgraph Storage ["2. Local Air-Gapped Vault"]
+        Sanitize --> LocalStore[("Local Store (electron-store)<br/>100-Item LRU History")]
+        NativeImg --> LocalStore
+        StarAction["Toggle Star / Favorite"] <-->|Pin Recurring Snippets| LocalStore
+    end
+
+    subgraph Presentation ["3. Instant HUD (React 18 & Vanilla CSS)"]
+        Hotkey["Global Hotkey (Alt + V)"] --> ToggleHUD["Summon / Dismiss HUD"]
+        Tray["System Tray Menu"] --> ToggleHUD
+        ToggleHUD --> HUD["iMemo Window<br/>(Frameless & Always-on-Top)"]
+        LocalStore --> HUD
+        HUD --> HistoryView["History Feed (Infinite Scroll)"]
+        HUD --> StarredView["Starred Vault"]
+        HUD --> SearchView["Sub-Millisecond Search"]
+        HUD --> SettingsView["Preferences & Hotkeys"]
+    end
+
+    subgraph Output ["4. Action & Native Paste Simulation"]
+        HUD -->|Spacebar / Hover| PreviewWin["Floating Inspector Window"]
+        HUD -->|Enter or Click Selection| PasteCheck{"Instant Paste Enabled?"}
+        PasteCheck -->|Yes| SimPaste["Native Keystroke Simulation<br/>(PowerShell / AppleScript)"]
+        PasteCheck -->|No| ClipOnly["Write to OS Clipboard"]
+        SimPaste --> TargetApp["Active Editor / Terminal / App"]
+    end
+```
 
 ---
 
