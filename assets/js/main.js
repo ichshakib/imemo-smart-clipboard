@@ -76,7 +76,8 @@
   // --- Theme Toggle (Dark / Light) ---
   function setupTheme() {
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    const savedTheme = localStorage.getItem('imemo-theme') || 'dark';
+    const savedTheme = localStorage.getItem('imemo-theme') || 
+      (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
     applyTheme(savedTheme);
 
@@ -86,6 +87,14 @@
         const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
         applyTheme(nextTheme);
         localStorage.setItem('imemo-theme', nextTheme);
+      });
+    }
+
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('imemo-theme')) {
+          applyTheme(e.matches ? 'dark' : 'light');
+        }
       });
     }
   }
@@ -104,6 +113,14 @@
         moonIcon.style.display = 'none';
       }
     }
+
+    // Toggle logo images for dark / light modes
+    document.querySelectorAll('.logo-dark').forEach((el) => {
+      el.style.display = theme === 'light' ? 'none' : 'block';
+    });
+    document.querySelectorAll('.logo-light').forEach((el) => {
+      el.style.display = theme === 'light' ? 'block' : 'none';
+    });
   }
 
   // --- FAQ Accordion ---
