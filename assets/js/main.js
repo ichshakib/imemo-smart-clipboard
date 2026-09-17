@@ -9,11 +9,11 @@
   // --- Release & Download Constants ---
   const VERSION = '0.1.0';
   const DOWNLOAD_URLS = {
-    WINDOWS: `https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Windows-${VERSION}-Setup.exe`,
-    MAC: `https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Mac-${VERSION}.dmg`,
-    LINUX_APPIMAGE: `https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.AppImage`,
-    LINUX_DEB: `https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.deb`,
-    LINUX_RPM: `https://github.com/lwshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.rpm`
+    WINDOWS: `https://github.com/ichshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Windows-${VERSION}-Setup.exe`,
+    MAC: `https://github.com/ichshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Mac-${VERSION}.dmg`,
+    LINUX_APPIMAGE: `https://github.com/ichshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.AppImage`,
+    LINUX_DEB: `https://github.com/ichshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.deb`,
+    LINUX_RPM: `https://github.com/ichshakib/imemo-smart-clipboard/releases/download/v${VERSION}/iMemo-Smart-Clipboard-Linux-${VERSION}.rpm`
   };
 
   // --- OS Detection ---
